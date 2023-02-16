@@ -9,17 +9,22 @@ defmodule Allydb.Database do
 
   @impl true
   def init(_) do
-    {:ok, %{}}
+    {:ok, :ets.new(__MODULE__, [:named_table, :public, :set])}
   end
 
   @impl true
   def handle_call({:get, key}, _from, state) do
-    {:reply, Map.get(state, key), state}
+    case :ets.lookup(state, key) do
+      [{_, value}] -> {:reply, value, state}
+      [] -> {:reply, nil, state}
+    end
   end
 
   @impl true
   def handle_call({:set, key, value}, _from, state) do
-    {:reply, :ok, Map.put(state, key, value)}
+    :ets.insert(state, {key, value})
+
+    {:reply, :ok, state}
   end
 
   def get(key) do
