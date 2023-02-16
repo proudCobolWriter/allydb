@@ -47,6 +47,10 @@ defmodule Allydb.Server do
     |> Enum.map(fn {x, i} -> if i == 0, do: String.upcase(x), else: x end)
   end
 
+  defp handle_line([""], socket) do
+    :gen_tcp.send(socket, @new_line)
+  end
+
   defp handle_line(["PING"], socket) do
     :gen_tcp.send(socket, "PONG #{@new_line}")
   end
