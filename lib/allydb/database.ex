@@ -27,11 +27,22 @@ defmodule Allydb.Database do
     {:reply, :ok, state}
   end
 
+  @impl true
+  def handle_call({:delete, key}, _from, state) do
+    :ets.delete(state, key)
+
+    {:reply, :ok, state}
+  end
+
   def get(key) do
     GenServer.call(__MODULE__, {:get, key})
   end
 
   def set(key, value) do
     GenServer.call(__MODULE__, {:set, key, value})
+  end
+
+  def delete(key) do
+    GenServer.call(__MODULE__, {:delete, key})
   end
 end

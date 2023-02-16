@@ -67,8 +67,18 @@ defmodule Allydb.Server do
     :gen_tcp.send(socket, "#{value} #{@new_line}")
   end
 
+  defp handle_line(["DEL", key], socket) do
+    :ok = Allydb.Database.delete(key)
+
+    Logger.info("DEL #{key}")
+
+    :gen_tcp.send(socket, "#{key} #{@new_line}")
+  end
+
   defp handle_line(["EXIT"], socket) do
     :gen_tcp.close(socket)
+
+    :ok = Task.Supervisor.terminate_child(Allydb.Server.TaskSupervisor, self())
   end
 
   defp handle_line(_, socket) do
