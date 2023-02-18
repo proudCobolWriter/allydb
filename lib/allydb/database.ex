@@ -28,6 +28,58 @@ defmodule Allydb.Database do
   end
 
   @impl true
+  def handle_call({:lpush, key, value}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] -> :ets.insert(state, {key, [value | list]})
+      [] -> :ets.insert(state, {key, [value]})
+    end
+
+    {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call({:rpush, key, value}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] -> :ets.insert(state, {key, list ++ [value]})
+      [] -> :ets.insert(state, {key, [value]})
+    end
+
+    {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call({:lpop, key}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, [value | list]}] ->
+        :ets.insert(state, {key, list})
+
+        {:reply, value, state}
+
+      [{_, []}] ->
+        {:reply, nil, state}
+
+      [] ->
+        {:reply, nil, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:rpop, key}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        value = Enum.at(list, -1)
+        list = Enum.take(list, -1)
+
+        :ets.insert(state, {key, list})
+
+        {:reply, value, state}
+
+      [] ->
+        {:reply, nil, state}
+    end
+  end
+
+  @impl true
   def handle_call({:delete, key}, _from, state) do
     :ets.delete(state, key)
 
@@ -40,6 +92,22 @@ defmodule Allydb.Database do
 
   def set(key, value) do
     GenServer.call(__MODULE__, {:set, key, value})
+  end
+
+  def lpush(key, value) do
+    GenServer.call(__MODULE__, {:lpush, key, value})
+  end
+
+  def rpush(key, value) do
+    GenServer.call(__MODULE__, {:rpush, key, value})
+  end
+
+  def lpop(key) do
+    GenServer.call(__MODULE__, {:lpop, key})
+  end
+
+  def rpop(key) do
+    GenServer.call(__MODULE__, {:rpop, key})
   end
 
   def delete(key) do

@@ -64,11 +64,47 @@ defmodule Allydb.Server do
   end
 
   defp handle_line(["SET", key | value], socket) do
-    IO.inspect(value)
+    value = Enum.join(value, " ")
 
     :ok = Allydb.Database.set(key, value)
 
     Logger.info("SET #{key} -> #{value}")
+
+    :gen_tcp.send(socket, "#{value} #{@new_line}")
+  end
+
+  defp handle_line(["LPUSH", key | value], socket) do
+    value = Enum.join(value, " ")
+
+    :ok = Allydb.Database.lpush(key, value)
+
+    Logger.info("LPUSH #{key} -> #{value}")
+
+    :gen_tcp.send(socket, "#{value} #{@new_line}")
+  end
+
+  defp handle_line(["RPUSH", key | value], socket) do
+    value = Enum.join(value, " ")
+
+    :ok = Allydb.Database.rpush(key, value)
+
+    Logger.info("RPUSH #{key} -> #{value}")
+
+    :gen_tcp.send(socket, "#{value} #{@new_line}")
+  end
+
+  defp handle_line(["LPOP", key], socket) do
+    value = Allydb.Database.lpop(key)
+
+    Logger.info("LPOP #{key} -> #{value}")
+
+    :gen_tcp.send(socket, "#{value} #{@new_line}")
+  end
+
+  defp handle_line(["RPOP", key], socket) do
+    value = Allydb.Database.rpop(key)
+
+    Logger.info("RPOP #{key} -> #{value}")
 
     :gen_tcp.send(socket, "#{value} #{@new_line}")
   end
@@ -82,6 +118,8 @@ defmodule Allydb.Server do
   end
 
   defp handle_line(["EXIT"], socket) do
+    Logger.info("EXIT")
+
     :gen_tcp.close(socket)
 
     :ok = Task.Supervisor.terminate_child(Allydb.Server.TaskSupervisor, self())
