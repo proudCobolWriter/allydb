@@ -79,6 +79,60 @@ defmodule Allydb.Database do
   end
 
   @impl true
+  def handle_call({:llen, key}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] -> {:reply, length(list), state}
+      [] -> {:reply, 0, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:ltrim, key, start, stop}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        :ets.insert(state, {key, Enum.slice(list, start, stop - start + 1)})
+
+        {:reply, :ok, state}
+
+      [] ->
+        {:reply, :ok, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:lindex, key, index}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        {:reply, Enum.at(list, index), state}
+
+      [] ->
+        {:reply, nil, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:lrange, key, start, stop}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        {:reply, Enum.slice(list, start, stop - start + 1), state}
+
+      [] ->
+        {:reply, [], state}
+    end
+  end
+
+  @impl true
+  def handle_call({:lpos, key, value}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        {:reply, Enum.find_index(list, &(&1 == value)), state}
+
+      [] ->
+        {:reply, nil, state}
+    end
+  end
+
+  @impl true
   def handle_call({:delete, key}, _from, state) do
     :ets.delete(state, key)
 
@@ -107,6 +161,30 @@ defmodule Allydb.Database do
 
   def rpop(key) do
     GenServer.call(__MODULE__, {:rpop, key})
+  end
+
+  def llen(key) do
+    GenServer.call(__MODULE__, {:llen, key})
+  end
+
+  def ltrim(key, start, stop) do
+    GenServer.call(__MODULE__, {:ltrim, key, start, stop})
+  end
+
+  def lindex(key, index) do
+    GenServer.call(__MODULE__, {:lindex, key, index})
+  end
+
+  def lrange(key, start, stop) do
+    GenServer.call(__MODULE__, {:lrange, key, start, stop})
+  end
+
+  def lpos(key, value) do
+    GenServer.call(__MODULE__, {:lpos, key, value})
+  end
+
+  def lpos_rank(key, value) do
+    GenServer.call(__MODULE__, {:lpos_rank, key, value})
   end
 
   def delete(key) do
