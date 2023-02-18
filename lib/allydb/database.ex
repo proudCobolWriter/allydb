@@ -68,9 +68,8 @@ defmodule Allydb.Database do
     case :ets.lookup(state, key) do
       [{_, list}] ->
         value = Enum.at(list, -1)
-        list = Enum.take(list, -1)
 
-        :ets.insert(state, {key, list})
+        :ets.insert(state, {key, Enum.take(list, length(list) - 1)})
 
         {:reply, value, state}
 
