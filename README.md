@@ -8,8 +8,9 @@ AllyDB is a database that is built using Elixir. It is mostly a learning project
 
 #### Should you use it?
 
-Probably not. It is not as stable and most likely as fast as Redis or other similar databases.
-It is also has less features than Redis.
+Probably not. It is not as stable and most likely not as fast as Redis or other similar databases.
+It also has less features than Redis.
+
 However, if you want to learn how to build a similar project, you can use this project as a reference.
 
 ## Roadmap
