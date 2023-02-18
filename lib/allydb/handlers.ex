@@ -39,12 +39,32 @@ defmodule Allydb.Handlers do
     :gen_tcp.send(socket, "#{value} #{@new_line}")
   end
 
+  def handle_line(["LPUSHX", key | value], socket) do
+    value = Enum.join(value, " ")
+
+    :ok = Allydb.Database.lpushx(key, value)
+
+    Logger.info("LPUSHX #{key} -> #{value}")
+
+    :gen_tcp.send(socket, "#{value} #{@new_line}")
+  end
+
   def handle_line(["RPUSH", key | value], socket) do
     value = Enum.join(value, " ")
 
     :ok = Allydb.Database.rpush(key, value)
 
     Logger.info("RPUSH #{key} -> #{value}")
+
+    :gen_tcp.send(socket, "#{value} #{@new_line}")
+  end
+
+  def handle_line(["RPUSHX", key | value], socket) do
+    value = Enum.join(value, " ")
+
+    :ok = Allydb.Database.rpushx(key, value)
+
+    Logger.info("RPUSHX #{key} -> #{value}")
 
     :gen_tcp.send(socket, "#{value} #{@new_line}")
   end
@@ -115,6 +135,42 @@ defmodule Allydb.Handlers do
     Logger.info("LPOS #{key} -> #{index}")
 
     :gen_tcp.send(socket, "#{index} #{@new_line}")
+  end
+
+  def handle_line(["LREM", key, value], socket) do
+    index = Allydb.Database.lrem(key, value)
+
+    Logger.info("LREM #{key} -> #{index}")
+
+    :gen_tcp.send(socket, "#{index} #{@new_line}")
+  end
+
+  def handle_line(["LINSERT", key, before_after, pivot, value], socket) do
+    case String.downcase(before_after) do
+      "before" ->
+        index = Allydb.Database.linsert(key, :before, pivot, value)
+
+        Logger.info("LINSERT #{key} -> #{index}")
+
+        :gen_tcp.send(socket, "#{index} #{@new_line}")
+
+      "after" ->
+        index = Allydb.Database.linsert(key, :after, pivot, value)
+
+        Logger.info("LINSERT #{key} -> #{index}")
+
+        :gen_tcp.send(socket, "#{index} #{@new_line}")
+    end
+  end
+
+  def handle_line(["LSET", key, index, value], socket) do
+    index = String.to_integer(index)
+
+    :ok = Allydb.Database.lset(key, index, value)
+
+    Logger.info("LSET #{key} -> #{value}")
+
+    :gen_tcp.send(socket, "#{value} #{@new_line}")
   end
 
   def handle_line(["DEL", key], socket) do

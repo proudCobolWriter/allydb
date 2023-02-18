@@ -38,10 +38,30 @@ defmodule Allydb.Database do
   end
 
   @impl true
+  def handle_call({:lpushx, key, value}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] -> :ets.insert(state, {key, [value | list]})
+      [] -> :ets.insert(state, {key, []})
+    end
+
+    {:reply, :ok, state}
+  end
+
+  @impl true
   def handle_call({:rpush, key, value}, _from, state) do
     case :ets.lookup(state, key) do
       [{_, list}] -> :ets.insert(state, {key, list ++ [value]})
       [] -> :ets.insert(state, {key, [value]})
+    end
+
+    {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call({:rpushx, key, value}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] -> :ets.insert(state, {key, list ++ [value]})
+      [] -> :ets.insert(state, {key, []})
     end
 
     {:reply, :ok, state}
@@ -133,6 +153,56 @@ defmodule Allydb.Database do
   end
 
   @impl true
+  def handle_call({:lrem, key, value}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        :ets.insert(state, {key, Enum.filter(list, &(&1 != value))})
+
+        {:reply, :ok, state}
+
+      [] ->
+        {:reply, :ok, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:linsert, key, position, pivot, value}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        case position do
+          :before ->
+            index = Enum.find_index(list, &(&1 == pivot))
+            :ets.insert(state, {key, Enum.take(list, index) ++ [value] ++ Enum.drop(list, index)})
+
+          :after ->
+            index = Enum.find_index(list, &(&1 == pivot))
+
+            :ets.insert(
+              state,
+              {key, Enum.take(list, index + 1) ++ [value] ++ Enum.drop(list, index + 1)}
+            )
+        end
+
+        {:reply, :ok, state}
+
+      [] ->
+        {:reply, :ok, state}
+    end
+  end
+
+  def handle_call({:lset, key, index, value}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        :ets.insert(state, {key, Enum.take(list, index) ++ [value] ++ Enum.drop(list, index + 1)})
+
+        {:reply, :ok, state}
+
+      [] ->
+        {:reply, :ok, state}
+    end
+  end
+
+  @impl true
   def handle_call({:delete, key}, _from, state) do
     :ets.delete(state, key)
 
@@ -151,8 +221,16 @@ defmodule Allydb.Database do
     GenServer.call(__MODULE__, {:lpush, key, value})
   end
 
+  def lpushx(key, value) do
+    GenServer.call(__MODULE__, {:lpushx, key, value})
+  end
+
   def rpush(key, value) do
     GenServer.call(__MODULE__, {:rpush, key, value})
+  end
+
+  def rpushx(key, value) do
+    GenServer.call(__MODULE__, {:rpushx, key, value})
   end
 
   def lpop(key) do
@@ -183,8 +261,16 @@ defmodule Allydb.Database do
     GenServer.call(__MODULE__, {:lpos, key, value})
   end
 
-  def lpos_rank(key, value) do
-    GenServer.call(__MODULE__, {:lpos_rank, key, value})
+  def lrem(key, value) do
+    GenServer.call(__MODULE__, {:lrem, key, value})
+  end
+
+  def linsert(key, position, pivot, value) do
+    GenServer.call(__MODULE__, {:linsert, key, position, pivot, value})
+  end
+
+  def lset(key, index, value) do
+    GenServer.call(__MODULE__, {:lset, key, index, value})
   end
 
   def delete(key) do
