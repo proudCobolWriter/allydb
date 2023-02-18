@@ -63,7 +63,9 @@ defmodule Allydb.Server do
     :gen_tcp.send(socket, "#{value} #{@new_line}")
   end
 
-  defp handle_line(["SET", key, value], socket) do
+  defp handle_line(["SET", key | value], socket) do
+    IO.inspect(value)
+
     :ok = Allydb.Database.set(key, value)
 
     Logger.info("SET #{key} -> #{value}")
@@ -85,7 +87,7 @@ defmodule Allydb.Server do
     :ok = Task.Supervisor.terminate_child(Allydb.Server.TaskSupervisor, self())
   end
 
-  defp handle_line(_, socket) do
-    :gen_tcp.send(socket, "Invalid command #{@new_line}")
+  defp handle_line([command | _], socket) do
+    :gen_tcp.send(socket, "Invalid command: #{command} #{@new_line}")
   end
 end
