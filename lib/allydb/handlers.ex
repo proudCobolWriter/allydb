@@ -1,4 +1,6 @@
 defmodule Allydb.Handlers do
+  @moduledoc false
+
   @new_line "\n> "
 
   require Logger

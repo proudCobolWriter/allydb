@@ -9,7 +9,14 @@ defmodule Allydb.Database do
 
   @impl true
   def init(_) do
-    {:ok, :ets.new(__MODULE__, [:named_table, :public, :set])}
+    {:ok, __MODULE__}
+  end
+
+  @impl true
+  def handle_call(:create, _from, state) do
+    :ets.new(state, [:named_table, :public, :set])
+
+    {:reply, :ok, state}
   end
 
   @impl true
@@ -215,6 +222,10 @@ defmodule Allydb.Database do
     :ets.delete(state, key)
 
     {:reply, :ok, state}
+  end
+
+  def create() do
+    GenServer.call(__MODULE__, :create)
   end
 
   def get(key) do
