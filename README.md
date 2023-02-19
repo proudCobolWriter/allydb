@@ -15,12 +15,14 @@ It also has less features than Redis.
 
 However, if you want to learn how to build a similar project, you can use this project as a reference.
 
+(~) means that the feature is implemented, but might not be stable or completely finished.
+
 ## Roadmap
 
 - [x] Basic key value store
 - [x] Lists
 - [x] Usage Guide
-- [ ] Persistence
+- [x] Persistence (~)
 - [ ] Hashes
 - [ ] Sets
 - [ ] Sorted Sets
@@ -33,6 +35,7 @@ While working on these features, I will be constantly trying to improve the perf
 (?) means that the item is an idea, but it is unclear how it will be implemented, or how the implementation will look like.
 
 - [ ] Better usage of OTP (?)
+- [ ] Better usage of ETS (?)
 
 ### Development Roadmap
 
@@ -40,6 +43,14 @@ While working on these features, I will be constantly trying to improve the perf
 - [ ] Improve the naming of things in the code
 
 ## Usage
+
+### Environment Variables
+
+| Name                   | Description                                          | Default      |
+| ---------------------- | ---------------------------------------------------- | ------------ |
+| `ALLYDB_PORT`          | The port on which the server will listen             | `4000`       |
+| `PERSISTENCE_LOCATION` | The location where the database will be persisted    | `allydb.tab` |
+| `PERSISTENCE_INTERVAL` | The interval at which the database will be persisted | `3000`       |
 
 ### Installation
 
