@@ -73,8 +73,10 @@ Set the value of a key.
 bar
 
 > SET another 123
+123
 
 > SET user:1:name John Doe
+John Doe
 ```
 
 ### `DEL <key>`
