@@ -10,10 +10,10 @@ Set the value of a field in a hash. Create a hash if it doesn't exist. Replace t
 
 ```sh
 > HSET hash field value another_field another_value
-1
+ok
 
 > HSET hash new_field new_value
-3
+ok
 ```
 
 ### `HGET <key> <field>`
@@ -55,10 +55,7 @@ Delete a field in a hash.
 
 ```sh
 > HDEL hash new_field
-1
-
-> HDEL hash doesnt_exist
-0
+ok
 ```
 
 ### `HLEN <key>`

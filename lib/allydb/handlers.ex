@@ -227,8 +227,6 @@ defmodule Allydb.Handlers do
   end
 
   def handle_line(["HSET", key | value], socket) do
-    IO.inspect(value)
-
     new_value = Utils.chunk_two(value)
 
     Allydb.Database.hset(key, new_value)
