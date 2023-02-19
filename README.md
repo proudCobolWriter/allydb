@@ -1,5 +1,7 @@
 # AllyDB
 
+![Latest Docker Image Version](https://img.shields.io/docker/v/allyedge/allydb?color=lightblue&label=Latest%20Docker%20Image%20Version&style=for-the-badge)
+
 An in-memory database similar to Redis, built using Elixir.
 
 ## Information
