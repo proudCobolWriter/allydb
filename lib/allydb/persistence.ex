@@ -3,6 +3,8 @@ defmodule Allydb.Persistence do
 
   use GenServer
 
+  require Logger
+
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
@@ -45,7 +47,7 @@ defmodule Allydb.Persistence do
   defp persist(state) do
     case :ets.tab2file(state.table, '#{state.persistence_location}') do
       :ok ->
-        IO.inspect("Persisted #{state.persistence_location}")
+        Logger.info("PERSIST -> #{state.persistence_location}")
 
         Process.send_after(self(), :persist, state.persistence_interval)
 
@@ -66,6 +68,8 @@ defmodule Allydb.Persistence do
   defp load_from_file(state) do
     case :ets.file2tab('#{state.persistence_location}') do
       {:ok, _} ->
+        Logger.info("LOAD -> #{state.persistence_location}")
+
         Process.send_after(self(), :persist, state.persistence_interval)
 
         {:ok, state}
