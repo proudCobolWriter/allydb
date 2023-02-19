@@ -337,6 +337,7 @@ Set the value at the specified index of a list.
 3
 
 > LSET list 1 4
+4
 
 > LRANGE list 0 2
 3

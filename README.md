@@ -73,4 +73,4 @@ You can also build the project from source.
 
 ## Usage
 
-You can find the usage guide [here](docs/USAGE.md)
+You can find the usage guide [here](docs/USAGE.md).
