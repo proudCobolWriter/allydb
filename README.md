@@ -70,3 +70,7 @@ You can also build the project from source.
 
 > _build/prod/rel/allydb/bin/allydb start
 ```
+
+## Usage
+
+You can find the usage guide [here](docs/USAGE.md)

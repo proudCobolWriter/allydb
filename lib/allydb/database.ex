@@ -40,11 +40,14 @@ defmodule Allydb.Database do
   @impl true
   def handle_call({:lpushx, key, value}, _from, state) do
     case :ets.lookup(state, key) do
-      [{_, list}] -> :ets.insert(state, {key, [value | list]})
-      [] -> :ets.insert(state, {key, []})
-    end
+      [{_, list}] ->
+        :ets.insert(state, {key, [value | list]})
 
-    {:reply, :ok, state}
+        {:reply, value, state}
+
+      [] ->
+        {:reply, nil, state}
+    end
   end
 
   @impl true
@@ -60,11 +63,14 @@ defmodule Allydb.Database do
   @impl true
   def handle_call({:rpushx, key, value}, _from, state) do
     case :ets.lookup(state, key) do
-      [{_, list}] -> :ets.insert(state, {key, list ++ [value]})
-      [] -> :ets.insert(state, {key, []})
-    end
+      [{_, list}] ->
+        :ets.insert(state, {key, list ++ [value]})
 
-    {:reply, :ok, state}
+        {:reply, value, state}
+
+      [] ->
+        {:reply, nil, state}
+    end
   end
 
   @impl true
@@ -156,9 +162,11 @@ defmodule Allydb.Database do
   def handle_call({:lrem, key, value}, _from, state) do
     case :ets.lookup(state, key) do
       [{_, list}] ->
-        :ets.insert(state, {key, Enum.filter(list, &(&1 != value))})
+        filtered = Enum.filter(list, &(&1 != value))
 
-        {:reply, :ok, state}
+        :ets.insert(state, {key, filtered})
+
+        {:reply, length(list) - length(filtered), state}
 
       [] ->
         {:reply, :ok, state}

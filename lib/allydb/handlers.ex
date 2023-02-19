@@ -42,11 +42,11 @@ defmodule Allydb.Handlers do
   def handle_line(["LPUSHX", key | value], socket) do
     value = Enum.join(value, " ")
 
-    :ok = Allydb.Database.lpushx(key, value)
+    response = Allydb.Database.lpushx(key, value)
 
     Logger.info("LPUSHX #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    :gen_tcp.send(socket, "#{response} #{@new_line}")
   end
 
   def handle_line(["RPUSH", key | value], socket) do
@@ -62,11 +62,11 @@ defmodule Allydb.Handlers do
   def handle_line(["RPUSHX", key | value], socket) do
     value = Enum.join(value, " ")
 
-    :ok = Allydb.Database.rpushx(key, value)
+    response = Allydb.Database.rpushx(key, value)
 
     Logger.info("RPUSHX #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    :gen_tcp.send(socket, "#{response} #{@new_line}")
   end
 
   def handle_line(["LPOP", key], socket) do
