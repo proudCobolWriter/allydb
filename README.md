@@ -19,7 +19,7 @@ However, if you want to learn how to build a similar project, you can use this p
 
 - [x] Basic key value store
 - [x] Lists
-- [ ] Usage Guide
+- [x] Usage Guide
 - [ ] Persistence
 - [ ] Hashes
 - [ ] Sets
