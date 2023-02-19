@@ -147,7 +147,9 @@ john
 
 The database is persisted to an append only log file. This means that the database can be restored to a previous state.
 
-The database is also persisted on a regular interval, in case something happens to the log file. The interval can be configured using the `PERSISTENCE_INTERVAL` environment variable. The default value is `3000ms`.
+The database is also persisted on a regular interval, in case something happens to the log file.
+
+The interval can be configured using the `PERSISTENCE_INTERVAL` environment variable. The default value is `3000ms`.
 
 ## License
 

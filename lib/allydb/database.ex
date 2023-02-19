@@ -13,6 +13,178 @@ defmodule Allydb.Database do
   end
 
   @impl true
+  def handle_cast({:set, key, value}, state) do
+    :ets.insert(state, {key, value})
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:delete, key}, state) do
+    :ets.delete(state, key)
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:lpush, key, value}, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] -> :ets.insert(state, {key, [value | list]})
+      [] -> :ets.insert(state, {key, [value]})
+    end
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:lpushx, key, value}, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        :ets.insert(state, {key, [value | list]})
+
+        {:noreply, state}
+
+      [] ->
+        {:noreply, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({:rpush, key, value}, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] -> :ets.insert(state, {key, list ++ [value]})
+      [] -> :ets.insert(state, {key, [value]})
+    end
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:rpushx, key, value}, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        :ets.insert(state, {key, list ++ [value]})
+
+        {:noreply, state}
+
+      [] ->
+        {:noreply, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({:ltrim, key, start, stop}, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        :ets.insert(state, {key, Enum.slice(list, start, stop - start + 1)})
+
+        {:noreply, state}
+
+      [] ->
+        {:noreply, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({:lrem, key, value}, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        filtered = Enum.filter(list, &(&1 != value))
+
+        :ets.insert(state, {key, filtered})
+
+        {:noreply, state}
+
+      [] ->
+        {:noreply, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({:linsert, key, position, pivot, value}, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        case position do
+          :before ->
+            index = Enum.find_index(list, &(&1 == pivot))
+            :ets.insert(state, {key, Enum.take(list, index) ++ [value] ++ Enum.drop(list, index)})
+
+          :after ->
+            index = Enum.find_index(list, &(&1 == pivot))
+
+            :ets.insert(
+              state,
+              {key, Enum.take(list, index + 1) ++ [value] ++ Enum.drop(list, index + 1)}
+            )
+        end
+
+        {:noreply, state}
+
+      [] ->
+        {:noreply, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({:lset, key, index, value}, state) do
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        :ets.insert(state, {key, Enum.take(list, index) ++ [value] ++ Enum.drop(list, index + 1)})
+
+        {:noreply, state}
+
+      [] ->
+        {:noreply, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({:hset, key, value}, state) do
+    case :ets.lookup(state, key) do
+      [{_, map}] ->
+        case map do
+          %{} ->
+            new_map = Map.merge(map, value)
+
+            :ets.insert(state, {key, new_map})
+
+            {:noreply, state}
+
+          _ ->
+            :ets.insert(state, {key, value})
+
+            {:noreply, state}
+        end
+
+      [] ->
+        :ets.insert(state, {key, value})
+
+        {:noreply, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({:hdel, key, fields}, state) do
+    case :ets.lookup(state, key) do
+      [{_, map}] ->
+        case map do
+          %{} ->
+            filtered = Enum.filter(fields, &Map.has_key?(map, &1))
+
+            :ets.insert(state, {key, Map.drop(map, filtered)})
+
+            {:noreply, state}
+
+          _ ->
+            {:noreply, state}
+        end
+
+      [] ->
+        {:noreply, state}
+    end
+  end
+
+  @impl true
   def handle_call(:create, _from, state) do
     :ets.new(state, [:named_table, :public, :set])
 
@@ -24,66 +196,6 @@ defmodule Allydb.Database do
     case :ets.lookup(state, key) do
       [{_, value}] -> {:reply, value, state}
       [] -> {:reply, nil, state}
-    end
-  end
-
-  @impl true
-  def handle_call({:set, key, value}, _from, state) do
-    :ets.insert(state, {key, value})
-
-    {:reply, :ok, state}
-  end
-
-  @impl true
-  def handle_call({:delete, key}, _from, state) do
-    :ets.delete(state, key)
-
-    {:reply, :ok, state}
-  end
-
-  @impl true
-  def handle_call({:lpush, key, value}, _from, state) do
-    case :ets.lookup(state, key) do
-      [{_, list}] -> :ets.insert(state, {key, [value | list]})
-      [] -> :ets.insert(state, {key, [value]})
-    end
-
-    {:reply, :ok, state}
-  end
-
-  @impl true
-  def handle_call({:lpushx, key, value}, _from, state) do
-    case :ets.lookup(state, key) do
-      [{_, list}] ->
-        :ets.insert(state, {key, [value | list]})
-
-        {:reply, value, state}
-
-      [] ->
-        {:reply, nil, state}
-    end
-  end
-
-  @impl true
-  def handle_call({:rpush, key, value}, _from, state) do
-    case :ets.lookup(state, key) do
-      [{_, list}] -> :ets.insert(state, {key, list ++ [value]})
-      [] -> :ets.insert(state, {key, [value]})
-    end
-
-    {:reply, :ok, state}
-  end
-
-  @impl true
-  def handle_call({:rpushx, key, value}, _from, state) do
-    case :ets.lookup(state, key) do
-      [{_, list}] ->
-        :ets.insert(state, {key, list ++ [value]})
-
-        {:reply, value, state}
-
-      [] ->
-        {:reply, nil, state}
     end
   end
 
@@ -127,19 +239,6 @@ defmodule Allydb.Database do
   end
 
   @impl true
-  def handle_call({:ltrim, key, start, stop}, _from, state) do
-    case :ets.lookup(state, key) do
-      [{_, list}] ->
-        :ets.insert(state, {key, Enum.slice(list, start, stop - start + 1)})
-
-        {:reply, :ok, state}
-
-      [] ->
-        {:reply, :ok, state}
-    end
-  end
-
-  @impl true
   def handle_call({:lindex, key, index}, _from, state) do
     case :ets.lookup(state, key) do
       [{_, list}] ->
@@ -173,84 +272,6 @@ defmodule Allydb.Database do
   end
 
   @impl true
-  def handle_call({:lrem, key, value}, _from, state) do
-    case :ets.lookup(state, key) do
-      [{_, list}] ->
-        filtered = Enum.filter(list, &(&1 != value))
-
-        :ets.insert(state, {key, filtered})
-
-        {:reply, length(list) - length(filtered), state}
-
-      [] ->
-        {:reply, :ok, state}
-    end
-  end
-
-  @impl true
-  def handle_call({:linsert, key, position, pivot, value}, _from, state) do
-    case :ets.lookup(state, key) do
-      [{_, list}] ->
-        case position do
-          :before ->
-            index = Enum.find_index(list, &(&1 == pivot))
-            :ets.insert(state, {key, Enum.take(list, index) ++ [value] ++ Enum.drop(list, index)})
-
-          :after ->
-            index = Enum.find_index(list, &(&1 == pivot))
-
-            :ets.insert(
-              state,
-              {key, Enum.take(list, index + 1) ++ [value] ++ Enum.drop(list, index + 1)}
-            )
-        end
-
-        {:reply, :ok, state}
-
-      [] ->
-        {:reply, :ok, state}
-    end
-  end
-
-  @impl true
-  def handle_call({:lset, key, index, value}, _from, state) do
-    case :ets.lookup(state, key) do
-      [{_, list}] ->
-        :ets.insert(state, {key, Enum.take(list, index) ++ [value] ++ Enum.drop(list, index + 1)})
-
-        {:reply, :ok, state}
-
-      [] ->
-        {:reply, :ok, state}
-    end
-  end
-
-  @impl true
-  def handle_call({:hset, key, value}, _from, state) do
-    case :ets.lookup(state, key) do
-      [{_, map}] ->
-        case map do
-          %{} ->
-            new_map = Map.merge(map, value)
-
-            :ets.insert(state, {key, new_map})
-
-            {:reply, Kernel.map_size(new_map), state}
-
-          _ ->
-            :ets.insert(state, {key, value})
-
-            {:reply, Kernel.map_size(value), state}
-        end
-
-      [] ->
-        :ets.insert(state, {key, value})
-
-        {:reply, Kernel.map_size(value), state}
-    end
-  end
-
-  @impl true
   def handle_call({:hget, key, field}, _from, state) do
     case :ets.lookup(state, key) do
       [{_, map}] ->
@@ -275,27 +296,6 @@ defmodule Allydb.Database do
 
       [] ->
         {:reply, nil, state}
-    end
-  end
-
-  @impl true
-  def handle_call({:hdel, key, fields}, _from, state) do
-    case :ets.lookup(state, key) do
-      [{_, map}] ->
-        case map do
-          %{} ->
-            filtered = Enum.filter(fields, &Map.has_key?(map, &1))
-
-            :ets.insert(state, {key, Map.drop(map, filtered)})
-
-            {:reply, length(filtered), state}
-
-          _ ->
-            {:reply, 0, state}
-        end
-
-      [] ->
-        {:reply, 0, state}
     end
   end
 
@@ -373,27 +373,27 @@ defmodule Allydb.Database do
   end
 
   def set(key, value) do
-    GenServer.call(__MODULE__, {:set, key, value})
+    GenServer.cast(__MODULE__, {:set, key, value})
   end
 
   def delete(key) do
-    GenServer.call(__MODULE__, {:delete, key})
+    GenServer.cast(__MODULE__, {:delete, key})
   end
 
   def lpush(key, value) do
-    GenServer.call(__MODULE__, {:lpush, key, value})
+    GenServer.cast(__MODULE__, {:lpush, key, value})
   end
 
   def lpushx(key, value) do
-    GenServer.call(__MODULE__, {:lpushx, key, value})
+    GenServer.cast(__MODULE__, {:lpushx, key, value})
   end
 
   def rpush(key, value) do
-    GenServer.call(__MODULE__, {:rpush, key, value})
+    GenServer.cast(__MODULE__, {:rpush, key, value})
   end
 
   def rpushx(key, value) do
-    GenServer.call(__MODULE__, {:rpushx, key, value})
+    GenServer.cast(__MODULE__, {:rpushx, key, value})
   end
 
   def lpop(key) do
@@ -425,19 +425,19 @@ defmodule Allydb.Database do
   end
 
   def lrem(key, value) do
-    GenServer.call(__MODULE__, {:lrem, key, value})
+    GenServer.cast(__MODULE__, {:lrem, key, value})
   end
 
   def linsert(key, position, pivot, value) do
-    GenServer.call(__MODULE__, {:linsert, key, position, pivot, value})
+    GenServer.cast(__MODULE__, {:linsert, key, position, pivot, value})
   end
 
   def lset(key, index, value) do
-    GenServer.call(__MODULE__, {:lset, key, index, value})
+    GenServer.cast(__MODULE__, {:lset, key, index, value})
   end
 
   def hset(key, value) do
-    GenServer.call(__MODULE__, {:hset, key, value})
+    GenServer.cast(__MODULE__, {:hset, key, value})
   end
 
   def hget(key, field) do
@@ -449,7 +449,7 @@ defmodule Allydb.Database do
   end
 
   def hdel(key, field) do
-    GenServer.call(__MODULE__, {:hdel, key, field})
+    GenServer.cast(__MODULE__, {:hdel, key, field})
   end
 
   def hlen(key) do

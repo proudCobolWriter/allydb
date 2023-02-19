@@ -37,8 +37,6 @@ defmodule Allydb.Server do
       {:ok, data} ->
         data |> Utils.parse_line() |> Handlers.handle_line(socket) |> Persistence.persist()
 
-        IO.inspect("a")
-
       {:error, :closed} ->
         :gen_tcp.close(socket)
     end

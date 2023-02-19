@@ -33,7 +33,7 @@ defmodule Allydb.Handlers do
   def handle_line(["SET", key | value], socket) do
     value = Enum.join(value, " ")
 
-    :ok = Allydb.Database.set(key, value)
+    Allydb.Database.set(key, value)
 
     Logger.info("SET #{key} -> #{value}")
 
@@ -43,7 +43,7 @@ defmodule Allydb.Handlers do
   end
 
   def handle_line(["DEL", key], socket) do
-    :ok = Allydb.Database.delete(key)
+    Allydb.Database.delete(key)
 
     Logger.info("DEL #{key}")
 
@@ -55,7 +55,7 @@ defmodule Allydb.Handlers do
   def handle_line(["LPUSH", key | value], socket) do
     value = Enum.join(value, " ")
 
-    :ok = Allydb.Database.lpush(key, value)
+    Allydb.Database.lpush(key, value)
 
     Logger.info("LPUSH #{key} -> #{value}")
 
@@ -67,11 +67,11 @@ defmodule Allydb.Handlers do
   def handle_line(["LPUSHX", key | value], socket) do
     value = Enum.join(value, " ")
 
-    response = Allydb.Database.lpushx(key, value)
+    Allydb.Database.lpushx(key, value)
 
     Logger.info("LPUSHX #{key} -> #{value}")
 
-    send_response(socket, response)
+    send_response(socket, value)
 
     "LPUSHX #{key} #{value}"
   end
@@ -79,7 +79,7 @@ defmodule Allydb.Handlers do
   def handle_line(["RPUSH", key | value], socket) do
     value = Enum.join(value, " ")
 
-    :ok = Allydb.Database.rpush(key, value)
+    Allydb.Database.rpush(key, value)
 
     Logger.info("RPUSH #{key} -> #{value}")
 
@@ -91,11 +91,11 @@ defmodule Allydb.Handlers do
   def handle_line(["RPUSHX", key | value], socket) do
     value = Enum.join(value, " ")
 
-    response = Allydb.Database.rpushx(key, value)
+    Allydb.Database.rpushx(key, value)
 
     Logger.info("RPUSHX #{key} -> #{value}")
 
-    send_response(socket, response)
+    send_response(socket, value)
 
     "RPUSHX #{key} #{value}"
   end
@@ -134,11 +134,11 @@ defmodule Allydb.Handlers do
     start = String.to_integer(start)
     stop = String.to_integer(stop)
 
-    value = Allydb.Database.ltrim(key, start, stop)
+    Allydb.Database.ltrim(key, start, stop)
 
-    Logger.info("LTRIM #{key} -> #{value}")
+    Logger.info("LTRIM #{key} -> #{start} #{stop}")
 
-    send_response(socket, value)
+    send_response(socket, "ok")
 
     "LTRIM #{key} #{start} #{stop}"
   end
@@ -183,11 +183,11 @@ defmodule Allydb.Handlers do
   end
 
   def handle_line(["LREM", key, value], socket) do
-    index = Allydb.Database.lrem(key, value)
+    Allydb.Database.lrem(key, value)
 
-    Logger.info("LREM #{key} -> #{index}")
+    Logger.info("LREM #{key}")
 
-    send_response(socket, index)
+    send_response(socket, key)
 
     "LREM #{key} #{value}"
   end
@@ -195,20 +195,20 @@ defmodule Allydb.Handlers do
   def handle_line(["LINSERT", key, before_after, pivot, value], socket) do
     case String.downcase(before_after) do
       "before" ->
-        index = Allydb.Database.linsert(key, :before, pivot, value)
+        Allydb.Database.linsert(key, :before, pivot, value)
 
-        Logger.info("LINSERT #{key} -> #{index}")
+        Logger.info("LINSERT #{key}")
 
-        send_response(socket, index)
+        send_response(socket, key)
 
         "LINSERT #{key} #{before_after} #{pivot} #{value}"
 
       "after" ->
-        index = Allydb.Database.linsert(key, :after, pivot, value)
+        Allydb.Database.linsert(key, :after, pivot, value)
 
-        Logger.info("LINSERT #{key} -> #{index}")
+        Logger.info("LINSERT #{key}")
 
-        send_response(socket, index)
+        send_response(socket, key)
 
         "LINSERT #{key} #{before_after} #{pivot} #{value}"
     end
@@ -217,7 +217,7 @@ defmodule Allydb.Handlers do
   def handle_line(["LSET", key, index, value], socket) do
     index = String.to_integer(index)
 
-    :ok = Allydb.Database.lset(key, index, value)
+    Allydb.Database.lset(key, index, value)
 
     Logger.info("LSET #{key} -> #{value}")
 
@@ -227,15 +227,19 @@ defmodule Allydb.Handlers do
   end
 
   def handle_line(["HSET", key | value], socket) do
-    value = Utils.chunk_two(value)
+    IO.inspect(value)
 
-    count = Allydb.Database.hset(key, value)
+    new_value = Utils.chunk_two(value)
 
-    Logger.info("HSET #{key} -> #{count}")
+    Allydb.Database.hset(key, new_value)
 
-    send_response(socket, count)
+    Logger.info("HSET #{key}")
 
-    "HSET #{key} #{value}"
+    send_response(socket, "ok")
+
+    values = Enum.map_join(value, " ", fn x -> x end)
+
+    "HSET #{key} #{values}"
   end
 
   def handle_line(["HGET", key, field], socket) do
@@ -264,11 +268,11 @@ defmodule Allydb.Handlers do
   end
 
   def handle_line(["HDEL", key | fields], socket) do
-    count = Allydb.Database.hdel(key, fields)
+    Allydb.Database.hdel(key, fields)
 
-    Logger.info("HDEL #{key} -> #{count}")
+    Logger.info("HDEL #{key}")
 
-    send_response(socket, count)
+    send_response(socket, "ok")
 
     "HDEL #{key} #{Enum.join(fields, " ")}"
   end
