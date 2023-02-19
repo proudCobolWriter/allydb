@@ -6,12 +6,18 @@ defmodule Allydb.Handlers do
 
   require Logger
 
+  def handle_line(command, socket \\ nil)
+
   def handle_line([""], socket) do
-    :gen_tcp.send(socket, @new_line)
+    send_empty_response(socket)
+
+    " "
   end
 
   def handle_line(["PING"], socket) do
-    :gen_tcp.send(socket, "PONG #{@new_line}")
+    send_response(socket, "PONG")
+
+    " "
   end
 
   def handle_line(["GET", key], socket) do
@@ -19,7 +25,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("GET #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    " "
   end
 
   def handle_line(["SET", key | value], socket) do
@@ -29,7 +37,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("SET #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    "SET #{key} #{value}"
   end
 
   def handle_line(["DEL", key], socket) do
@@ -37,7 +47,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("DEL #{key}")
 
-    :gen_tcp.send(socket, "#{key} #{@new_line}")
+    send_response(socket, key)
+
+    "DEL #{key}"
   end
 
   def handle_line(["LPUSH", key | value], socket) do
@@ -47,7 +59,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("LPUSH #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    "LPUSH #{key} #{value}"
   end
 
   def handle_line(["LPUSHX", key | value], socket) do
@@ -57,7 +71,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("LPUSHX #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{response} #{@new_line}")
+    send_response(socket, response)
+
+    "LPUSHX #{key} #{value}"
   end
 
   def handle_line(["RPUSH", key | value], socket) do
@@ -67,7 +83,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("RPUSH #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    "RPUSH #{key} #{value}"
   end
 
   def handle_line(["RPUSHX", key | value], socket) do
@@ -77,7 +95,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("RPUSHX #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{response} #{@new_line}")
+    send_response(socket, response)
+
+    "RPUSHX #{key} #{value}"
   end
 
   def handle_line(["LPOP", key], socket) do
@@ -85,7 +105,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("LPOP #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    "LPOP #{key}"
   end
 
   def handle_line(["RPOP", key], socket) do
@@ -93,7 +115,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("RPOP #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    "RPOP #{key}"
   end
 
   def handle_line(["LLEN", key], socket) do
@@ -101,7 +125,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("LLEN #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    " "
   end
 
   def handle_line(["LTRIM", key, start, stop], socket) do
@@ -112,7 +138,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("LTRIM #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    "LTRIM #{key} #{start} #{stop}"
   end
 
   def handle_line(["LINDEX", key, index], socket) do
@@ -122,7 +150,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("LINDEX #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    " "
   end
 
   def handle_line(["LRANGE", key, start, stop], socket) do
@@ -134,10 +164,12 @@ defmodule Allydb.Handlers do
     Logger.info("LRANGE #{key} -> #{value}")
 
     Enum.each(value, fn x ->
-      :gen_tcp.send(socket, "#{x}\n")
+      send_line_response(socket, x)
     end)
 
-    :gen_tcp.send(socket, @new_line)
+    send_empty_response(socket)
+
+    " "
   end
 
   def handle_line(["LPOS", key, value], socket) do
@@ -145,7 +177,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("LPOS #{key} -> #{index}")
 
-    :gen_tcp.send(socket, "#{index} #{@new_line}")
+    send_response(socket, index)
+
+    " "
   end
 
   def handle_line(["LREM", key, value], socket) do
@@ -153,7 +187,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("LREM #{key} -> #{index}")
 
-    :gen_tcp.send(socket, "#{index} #{@new_line}")
+    send_response(socket, index)
+
+    "LREM #{key} #{value}"
   end
 
   def handle_line(["LINSERT", key, before_after, pivot, value], socket) do
@@ -163,14 +199,18 @@ defmodule Allydb.Handlers do
 
         Logger.info("LINSERT #{key} -> #{index}")
 
-        :gen_tcp.send(socket, "#{index} #{@new_line}")
+        send_response(socket, index)
+
+        "LINSERT #{key} #{before_after} #{pivot} #{value}"
 
       "after" ->
         index = Allydb.Database.linsert(key, :after, pivot, value)
 
         Logger.info("LINSERT #{key} -> #{index}")
 
-        :gen_tcp.send(socket, "#{index} #{@new_line}")
+        send_response(socket, index)
+
+        "LINSERT #{key} #{before_after} #{pivot} #{value}"
     end
   end
 
@@ -181,7 +221,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("LSET #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    "LSET #{key} #{index} #{value}"
   end
 
   def handle_line(["HSET", key | value], socket) do
@@ -191,7 +233,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("HSET #{key} -> #{count}")
 
-    :gen_tcp.send(socket, "#{count} #{@new_line}")
+    send_response(socket, count)
+
+    "HSET #{key} #{value}"
   end
 
   def handle_line(["HGET", key, field], socket) do
@@ -199,7 +243,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("HGET #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    " "
   end
 
   def handle_line(["HGETALL", key], socket) do
@@ -208,11 +254,13 @@ defmodule Allydb.Handlers do
     Logger.info("HGETALL #{key} -> #{Enum.map_join(value, ", ", fn {k, v} -> "#{k}: #{v}" end)}")
 
     Enum.each(value, fn {k, v} ->
-      :gen_tcp.send(socket, "#{k}\n")
-      :gen_tcp.send(socket, "#{v}\n")
+      send_line_response(socket, k)
+      send_line_response(socket, v)
     end)
 
-    :gen_tcp.send(socket, @new_line)
+    send_empty_response(socket)
+
+    " "
   end
 
   def handle_line(["HDEL", key | fields], socket) do
@@ -220,7 +268,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("HDEL #{key} -> #{count}")
 
-    :gen_tcp.send(socket, "#{count} #{@new_line}")
+    send_response(socket, count)
+
+    "HDEL #{key} #{Enum.join(fields, " ")}"
   end
 
   def handle_line(["HLEN", key], socket) do
@@ -228,7 +278,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("HLEN #{key} -> #{count}")
 
-    :gen_tcp.send(socket, "#{count} #{@new_line}")
+    send_response(socket, count)
+
+    " "
   end
 
   def handle_line(["HEXISTS", key, field], socket) do
@@ -236,7 +288,9 @@ defmodule Allydb.Handlers do
 
     Logger.info("HEXISTS #{key} -> #{value}")
 
-    :gen_tcp.send(socket, "#{value} #{@new_line}")
+    send_response(socket, value)
+
+    " "
   end
 
   def handle_line(["HKEYS", key], socket) do
@@ -245,10 +299,12 @@ defmodule Allydb.Handlers do
     Logger.info("HKEYS #{key} -> #{value}")
 
     Enum.each(value, fn x ->
-      :gen_tcp.send(socket, "#{x}\n")
+      send_line_response(socket, x)
     end)
 
-    :gen_tcp.send(socket, @new_line)
+    send_empty_response(socket)
+
+    " "
   end
 
   def handle_line(["HVALS", key], socket) do
@@ -257,10 +313,12 @@ defmodule Allydb.Handlers do
     Logger.info("HVALS #{key} -> #{value}")
 
     Enum.each(value, fn x ->
-      :gen_tcp.send(socket, "#{x}\n")
+      send_line_response(socket, x)
     end)
 
-    :gen_tcp.send(socket, @new_line)
+    send_empty_response(socket)
+
+    " "
   end
 
   def handle_line(["EXIT"], socket) do
@@ -269,9 +327,43 @@ defmodule Allydb.Handlers do
     :gen_tcp.close(socket)
 
     :ok = Task.Supervisor.terminate_child(Allydb.Server.TaskSupervisor, self())
+
+    "EXIT"
   end
 
   def handle_line([command | _], socket) do
-    :gen_tcp.send(socket, "Invalid command: #{command} #{@new_line}")
+    send_response(socket, "Invalid command: #{command}")
+
+    " "
+  end
+
+  defp send_response(socket, value) do
+    case socket do
+      nil ->
+        :ok
+
+      _ ->
+        :gen_tcp.send(socket, "#{value} #{@new_line}")
+    end
+  end
+
+  defp send_line_response(socket, value) do
+    case socket do
+      nil ->
+        :ok
+
+      _ ->
+        :gen_tcp.send(socket, "#{value}\n")
+    end
+  end
+
+  defp send_empty_response(socket) do
+    case socket do
+      nil ->
+        :ok
+
+      _ ->
+        :gen_tcp.send(socket, @new_line)
+    end
   end
 end

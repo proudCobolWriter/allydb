@@ -27,3 +27,4 @@ allydb-*.tar
 
 # AllyDB files
 *.tab
+*.log

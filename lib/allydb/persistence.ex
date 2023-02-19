@@ -1,9 +1,11 @@
 defmodule Allydb.Persistence do
   @moduledoc false
+  alias Allydb.Database
+  alias Allydb.IntervalPersistence
+  alias Allydb.Handlers
+  alias Allydb.Utils
 
   use GenServer
-
-  require Logger
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
@@ -17,75 +19,75 @@ defmodule Allydb.Persistence do
 
     {:ok,
      %{
-       table: Allydb.Database,
-       persistence_location: List.first(args),
-       persistence_interval: List.last(args)
+       log_persistence_location: List.first(args),
+       persistance_location: List.last(args),
+       file: File.open!(List.first(args), [:append])
      }}
   end
 
   @impl true
-  def handle_info(:persist, state) do
-    case persist(state) do
-      :ok -> {:noreply, state}
-      {:error, reason} -> {:stop, reason, state}
-    end
-  end
+  def handle_info(:load, state) do
+    create_table(state)
 
-  @impl true
-  def handle_info(:timeout, state) do
+    load(state)
+
     {:noreply, state}
   end
 
   @impl true
-  def handle_info(:load, state) do
-    case load(state) do
-      {:ok, state} -> {:noreply, state}
-      {:error, reason} -> {:stop, reason, state}
-    end
+  def handle_cast({:persist, line}, state) do
+    persist_to_file(state, line)
+
+    {:noreply, state}
   end
 
-  defp persist(state) do
-    case :ets.tab2file(state.table, '#{state.persistence_location}') do
-      :ok ->
-        Process.send_after(self(), :persist, state.persistence_interval)
+  def persist(line) do
+    GenServer.cast(__MODULE__, {:persist, line})
+  end
 
-        :ok
-
-      {:error, reason} ->
-        {:error, reason}
+  defp persist_to_file(state, line) do
+    if line == " " do
+      :ok
+    else
+      IO.write(state.file, "#{line}\n")
     end
   end
 
   defp load(state) do
-    case File.exists?(state.persistence_location) do
-      true -> load_from_file(state)
-      false -> create_table(state)
-    end
-  end
-
-  defp load_from_file(state) do
-    case :ets.file2tab('#{state.persistence_location}') do
-      {:ok, _} ->
-        Logger.info("LOAD -> #{state.persistence_location}")
-
-        Process.send_after(self(), :persist, state.persistence_interval)
+    case File.exists?(state.log_persistence_location) do
+      true ->
+        File.stream!(state.log_persistence_location)
+        |> Stream.map(&handle/1)
+        |> Stream.run()
 
         {:ok, state}
 
-      {:error, reason} ->
-        {:error, reason}
+      false ->
+        case IntervalPersistence.exists?(state.persistance_location) do
+          true ->
+            IntervalPersistence.load(state.persistance_location)
+
+          false ->
+            :ok
+        end
+
+        File.touch!(state.log_persistence_location)
+
+        {:ok, state}
     end
   end
 
   defp create_table(state) do
-    case Allydb.Database.create() do
+    case Database.create() do
       :ok ->
-        Process.send_after(self(), :persist, state.persistence_interval)
-
         {:ok, state}
 
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  defp handle(line) do
+    line |> Utils.parse_line_with_end() |> Handlers.handle_line()
   end
 end

@@ -3,6 +3,8 @@ defmodule Allydb.Server do
 
   require Logger
 
+  alias Allydb.Persistence
+  alias Allydb.Utils
   alias Allydb.Handlers
 
   def accept(port) do
@@ -32,18 +34,15 @@ defmodule Allydb.Server do
 
   defp serve(socket) do
     case :gen_tcp.recv(socket, 0) do
-      {:ok, data} -> data |> parse_line() |> Handlers.handle_line(socket)
-      {:error, :closed} -> :gen_tcp.close(socket)
+      {:ok, data} ->
+        data |> Utils.parse_line() |> Handlers.handle_line(socket) |> Persistence.persist()
+
+        IO.inspect("a")
+
+      {:error, :closed} ->
+        :gen_tcp.close(socket)
     end
 
     serve(socket)
-  end
-
-  defp parse_line(line) do
-    line
-    |> String.split(" ")
-    |> Enum.map(fn x -> String.trim(x) end)
-    |> Enum.with_index()
-    |> Enum.map(fn {x, i} -> if i == 0, do: String.upcase(x), else: x end)
   end
 end

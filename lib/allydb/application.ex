@@ -10,12 +10,18 @@ defmodule Allydb.Application do
     persistence_location = System.get_env("ALLYDB_PERSISTENCE_LOCATION") || "allydb.tab"
 
     persistence_interval =
-      String.to_integer(System.get_env("ALLYDB_PERSISTENCE_INTERVAL") || "3000")
+      String.to_integer(System.get_env("ALLYDB_PERSISTENCE_INTERVAL") || "10000")
+
+    log_persistence_location = System.get_env("ALLYDB_LOG_PERSISTENCE_LOCATION") || "allydb.log"
 
     children = [
       {
         Allydb.Persistence,
-        name: Allydb.Persistence, args: [persistence_location, persistence_interval]
+        name: Allydb.Persistence, args: [log_persistence_location, persistence_location]
+      },
+      {
+        Allydb.IntervalPersistence,
+        name: Allydb.IntervalPersistence, args: [persistence_location, persistence_interval]
       },
       {
         Allydb.Database,

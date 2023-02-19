@@ -9,4 +9,18 @@ defmodule Allydb.Utils do
 
     value
   end
+
+  def parse_line(line) do
+    line
+    |> String.split(" ")
+    |> Enum.map(fn x -> String.trim(x) end)
+    |> Enum.with_index()
+    |> Enum.map(fn {x, i} -> if i == 0, do: String.upcase(x), else: x end)
+  end
+
+  def parse_line_with_end(line) do
+    line
+    |> String.slice(0..-2)
+    |> parse_line()
+  end
 end

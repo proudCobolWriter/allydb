@@ -40,6 +40,7 @@ However, if you want to learn how to build a similar project, you can use this p
 
 - [ ] Better usage of OTP (?)
 - [ ] Better usage of ETS (?)
+- [ ] Optimize persistence (?)
 
 ### Development Roadmap
 
@@ -144,13 +145,9 @@ john
 
 ## Persistence
 
-The database is persisted to a file using ETS. The file is located at `allydb.tab` by default.
+The database is persisted to an append only log file. This means that the database can be restored to a previous state.
 
-The database is persisted on a regular interval and not on every change. The interval is `3000ms` by default.
-
-This means that if you make a change to the database, it might not be persisted immediately.
-
-You can change the persistence interval using the `PERSISTENCE_INTERVAL` environment variable (in milliseconds) to make it persist more often, but this might mean a higher CPU and disk usage.
+The database is also persisted on a regular interval, in case something happens to the log file. The interval can be configured using the `PERSISTENCE_INTERVAL` environment variable. The default value is `3000ms`.
 
 ## License
 

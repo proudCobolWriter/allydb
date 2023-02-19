@@ -1,2 +1,3 @@
 _build
 docs
+*.log
