@@ -47,8 +47,6 @@ defmodule Allydb.Persistence do
   defp persist(state) do
     case :ets.tab2file(state.table, '#{state.persistence_location}') do
       :ok ->
-        Logger.info("PERSIST -> #{state.persistence_location}")
-
         Process.send_after(self(), :persist, state.persistence_interval)
 
         :ok

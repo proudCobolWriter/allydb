@@ -29,7 +29,7 @@ However, if you want to learn how to build a similar project, you can use this p
 - [x] Lists
 - [x] Usage Guide
 - [x] Persistence (~)
-- [ ] Hashes
+- [x] Hashes
 - [ ] Sets
 - [ ] Sorted Sets
 - [ ] Pub/Sub
@@ -88,6 +88,20 @@ You can also build the project from source.
 > _build/prod/rel/allydb/bin/allydb start
 ```
 
-## Usage
+## Documentation
 
-You can find the usage guide [here](docs/USAGE.md).
+You can find the documentation [here](docs/DOCUMENTATION.md).
+
+## Persistence
+
+The database is persisted to a file using ETS. The file is located at `allydb.tab` by default.
+
+The database is persisted on a regular interval and not on every change. The interval is 3000ms by default.
+
+This means that if you make a change to the database, it might not be persisted immediately.
+
+You can change the persistence interval using the `PERSISTENCE_INTERVAL` environment variable (in milliseconds) to make it persist more often, but this might mean a higher CPU and disk usage.
+
+## License
+
+AllyDB is licensed under the Apache License 2.0. You can find the license [here](LICENSE).

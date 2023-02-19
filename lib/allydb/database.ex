@@ -35,6 +35,13 @@ defmodule Allydb.Database do
   end
 
   @impl true
+  def handle_call({:delete, key}, _from, state) do
+    :ets.delete(state, key)
+
+    {:reply, :ok, state}
+  end
+
+  @impl true
   def handle_call({:lpush, key, value}, _from, state) do
     case :ets.lookup(state, key) do
       [{_, list}] -> :ets.insert(state, {key, [value | list]})
@@ -205,6 +212,7 @@ defmodule Allydb.Database do
     end
   end
 
+  @impl true
   def handle_call({:lset, key, index, value}, _from, state) do
     case :ets.lookup(state, key) do
       [{_, list}] ->
@@ -218,10 +226,142 @@ defmodule Allydb.Database do
   end
 
   @impl true
-  def handle_call({:delete, key}, _from, state) do
-    :ets.delete(state, key)
+  def handle_call({:hset, key, value}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, map}] ->
+        case map do
+          %{} ->
+            new_map = Map.merge(map, value)
 
-    {:reply, :ok, state}
+            :ets.insert(state, {key, new_map})
+
+            {:reply, Kernel.map_size(new_map), state}
+
+          _ ->
+            :ets.insert(state, {key, value})
+
+            {:reply, Kernel.map_size(value), state}
+        end
+
+      [] ->
+        :ets.insert(state, {key, value})
+
+        {:reply, Kernel.map_size(value), state}
+    end
+  end
+
+  @impl true
+  def handle_call({:hget, key, field}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, map}] ->
+        case map do
+          %{} -> {:reply, Map.get(map, field), state}
+          _ -> {:reply, nil, state}
+        end
+
+      [] ->
+        {:reply, nil, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:hgetall, key}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, map}] ->
+        case map do
+          %{} -> {:reply, map, state}
+          _ -> {:reply, nil, state}
+        end
+
+      [] ->
+        {:reply, nil, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:hdel, key, fields}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, map}] ->
+        case map do
+          %{} ->
+            filtered = Enum.filter(fields, &Map.has_key?(map, &1))
+
+            :ets.insert(state, {key, Map.drop(map, filtered)})
+
+            {:reply, length(filtered), state}
+
+          _ ->
+            {:reply, 0, state}
+        end
+
+      [] ->
+        {:reply, 0, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:hlen, key}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, map}] ->
+        case map do
+          %{} -> {:reply, Kernel.map_size(map), state}
+          _ -> {:reply, 0, state}
+        end
+
+      [] ->
+        {:reply, 0, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:hexists, key, field}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, map}] ->
+        case map do
+          %{} ->
+            has_key =
+              case Map.has_key?(map, field) do
+                true -> 1
+                false -> 0
+              end
+
+            {:reply, has_key, state}
+
+          _ ->
+            {:reply, 0, state}
+        end
+
+      [] ->
+        {:reply, 1, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:hkeys, key}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, map}] ->
+        case map do
+          %{} -> {:reply, Map.keys(map), state}
+          _ -> {:reply, [], state}
+        end
+
+      [] ->
+        {:reply, [], state}
+    end
+  end
+
+  @impl true
+  def handle_call({:hvals, key}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, map}] ->
+        case map do
+          %{} -> {:reply, Map.values(map), state}
+          _ -> {:reply, [], state}
+        end
+
+      [] ->
+        {:reply, [], state}
+    end
   end
 
   def create() do
@@ -234,6 +374,10 @@ defmodule Allydb.Database do
 
   def set(key, value) do
     GenServer.call(__MODULE__, {:set, key, value})
+  end
+
+  def delete(key) do
+    GenServer.call(__MODULE__, {:delete, key})
   end
 
   def lpush(key, value) do
@@ -292,7 +436,35 @@ defmodule Allydb.Database do
     GenServer.call(__MODULE__, {:lset, key, index, value})
   end
 
-  def delete(key) do
-    GenServer.call(__MODULE__, {:delete, key})
+  def hset(key, value) do
+    GenServer.call(__MODULE__, {:hset, key, value})
+  end
+
+  def hget(key, field) do
+    GenServer.call(__MODULE__, {:hget, key, field})
+  end
+
+  def hgetall(key) do
+    GenServer.call(__MODULE__, {:hgetall, key})
+  end
+
+  def hdel(key, field) do
+    GenServer.call(__MODULE__, {:hdel, key, field})
+  end
+
+  def hlen(key) do
+    GenServer.call(__MODULE__, {:hlen, key})
+  end
+
+  def hexists(key, field) do
+    GenServer.call(__MODULE__, {:hexists, key, field})
+  end
+
+  def hkeys(key) do
+    GenServer.call(__MODULE__, {:hkeys, key})
+  end
+
+  def hvals(key) do
+    GenServer.call(__MODULE__, {:hvals, key})
   end
 end

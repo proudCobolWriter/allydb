@@ -1,5 +1,6 @@
 defmodule Allydb.Handlers do
   @moduledoc false
+  alias Allydb.Utils
 
   @new_line "\n> "
 
@@ -29,6 +30,14 @@ defmodule Allydb.Handlers do
     Logger.info("SET #{key} -> #{value}")
 
     :gen_tcp.send(socket, "#{value} #{@new_line}")
+  end
+
+  def handle_line(["DEL", key], socket) do
+    :ok = Allydb.Database.delete(key)
+
+    Logger.info("DEL #{key}")
+
+    :gen_tcp.send(socket, "#{key} #{@new_line}")
   end
 
   def handle_line(["LPUSH", key | value], socket) do
@@ -175,12 +184,83 @@ defmodule Allydb.Handlers do
     :gen_tcp.send(socket, "#{value} #{@new_line}")
   end
 
-  def handle_line(["DEL", key], socket) do
-    :ok = Allydb.Database.delete(key)
+  def handle_line(["HSET", key | value], socket) do
+    value = Utils.chunk_two(value)
 
-    Logger.info("DEL #{key}")
+    count = Allydb.Database.hset(key, value)
 
-    :gen_tcp.send(socket, "#{key} #{@new_line}")
+    Logger.info("HSET #{key} -> #{count}")
+
+    :gen_tcp.send(socket, "#{count} #{@new_line}")
+  end
+
+  def handle_line(["HGET", key, field], socket) do
+    value = Allydb.Database.hget(key, field)
+
+    Logger.info("HGET #{key} -> #{value}")
+
+    :gen_tcp.send(socket, "#{value} #{@new_line}")
+  end
+
+  def handle_line(["HGETALL", key], socket) do
+    value = Allydb.Database.hgetall(key)
+
+    Logger.info("HGETALL #{key} -> #{Enum.map_join(value, ", ", fn {k, v} -> "#{k}: #{v}" end)}")
+
+    Enum.each(value, fn {k, v} ->
+      :gen_tcp.send(socket, "#{k}\n")
+      :gen_tcp.send(socket, "#{v}\n")
+    end)
+
+    :gen_tcp.send(socket, @new_line)
+  end
+
+  def handle_line(["HDEL", key | fields], socket) do
+    count = Allydb.Database.hdel(key, fields)
+
+    Logger.info("HDEL #{key} -> #{count}")
+
+    :gen_tcp.send(socket, "#{count} #{@new_line}")
+  end
+
+  def handle_line(["HLEN", key], socket) do
+    count = Allydb.Database.hlen(key)
+
+    Logger.info("HLEN #{key} -> #{count}")
+
+    :gen_tcp.send(socket, "#{count} #{@new_line}")
+  end
+
+  def handle_line(["HEXISTS", key, field], socket) do
+    value = Allydb.Database.hexists(key, field)
+
+    Logger.info("HEXISTS #{key} -> #{value}")
+
+    :gen_tcp.send(socket, "#{value} #{@new_line}")
+  end
+
+  def handle_line(["HKEYS", key], socket) do
+    value = Allydb.Database.hkeys(key)
+
+    Logger.info("HKEYS #{key} -> #{value}")
+
+    Enum.each(value, fn x ->
+      :gen_tcp.send(socket, "#{x}\n")
+    end)
+
+    :gen_tcp.send(socket, @new_line)
+  end
+
+  def handle_line(["HVALS", key], socket) do
+    value = Allydb.Database.hvals(key)
+
+    Logger.info("HVALS #{key} -> #{value}")
+
+    Enum.each(value, fn x ->
+      :gen_tcp.send(socket, "#{x}\n")
+    end)
+
+    :gen_tcp.send(socket, @new_line)
   end
 
   def handle_line(["EXIT"], socket) do
