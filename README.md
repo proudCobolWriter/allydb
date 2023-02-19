@@ -153,4 +153,4 @@ The interval can be configured using the `PERSISTENCE_INTERVAL` environment vari
 
 ## License
 
-AllyDB is licensed under the Apache License 2.0. You can find the license [here](LICENSE).
+AllyDB is licensed under the Apache License 2.0. You can find the license [here](https://github.com/Allyedge/allydb/blob/main/LICENSE).

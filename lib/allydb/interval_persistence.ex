@@ -14,6 +14,8 @@ defmodule Allydb.IntervalPersistence do
   def init(args) do
     args = Keyword.get(args, :args)
 
+    Process.send_after(self(), :load, 0)
+
     {:ok,
      %{
        table: Allydb.Database,
