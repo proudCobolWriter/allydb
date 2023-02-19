@@ -21,14 +21,12 @@ It also has less features than Redis.
 
 However, if you want to learn how to build a similar project, you can use this project as a reference.
 
-(~) means that the feature is implemented, but might not be stable or completely finished.
-
 ## Roadmap
 
 - [x] Basic key value store
 - [x] Lists
 - [x] Usage Guide
-- [x] Persistence (~)
+- [x] Persistence
 - [x] Hashes
 - [ ] Sets
 - [ ] Sorted Sets
