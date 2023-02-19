@@ -1,0 +1,19 @@
+# Commands
+
+AllyDB commands are similar to Redis. They are case-insensitive and end with a newline character.
+
+### Example of a command
+
+```sh
+> COMMAND arg1 arg2
+```
+
+### Example of running a command in Node.js
+
+```js
+const net = require("net");
+
+const client = net.createConnection(4000, () => {
+  client.write("COMMAND arg1 arg2\n");
+});
+```

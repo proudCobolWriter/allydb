@@ -12,7 +12,7 @@ An in-memory database similar to Redis, built using Elixir.
 
 AllyDB is a database that is built using Elixir. It is mostly a learning project, but I will try to make it as usable as possible.
 
-#### Should you use it?
+## Should you use it?
 
 Probably not.
 
@@ -31,8 +31,6 @@ However, if you want to learn how to build a similar project, you can use this p
 - [ ] Sets
 - [ ] Sorted Sets
 - [ ] Pub/Sub
-
-While working on these features, I will be constantly trying to improve the performance of the database.
 
 ### Performance Roadmap
 
@@ -88,13 +86,65 @@ You can also build the project from source.
 
 ## Documentation
 
-You can find the documentation [here](docs/DOCUMENTATION.md).
+You can find the documentation [here](https://allydb.vercel.app).
+
+## Example Usage
+
+### Basic Key Value Store
+
+```sh
+> SET hello world
+world
+
+> GET hello
+world
+
+> DEL hello
+hello
+```
+
+### Lists
+
+```sh
+> lpush list 1
+1
+
+> lpush list 2
+2
+
+> lpush list 3
+3
+
+> lpop list
+3
+```
+
+### Hashes
+
+```sh
+> hset user id 1 name john age 20
+3
+
+> hget user name
+john
+
+> hgetall user
+age
+20
+id
+1
+name
+john
+
+> hdel user age
+1
+```
 
 ## Persistence
 
 The database is persisted to a file using ETS. The file is located at `allydb.tab` by default.
 
-The database is persisted on a regular interval and not on every change. The interval is 3000ms by default.
+The database is persisted on a regular interval and not on every change. The interval is `3000ms` by default.
 
 This means that if you make a change to the database, it might not be persisted immediately.
 
@@ -103,3 +153,7 @@ You can change the persistence interval using the `PERSISTENCE_INTERVAL` environ
 ## License
 
 AllyDB is licensed under the Apache License 2.0. You can find the license [here](LICENSE).
+
+```
+
+```

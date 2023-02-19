@@ -1,0 +1,39 @@
+# Installation
+
+### Installation
+
+#### Using Docker
+
+You can use the docker image to run the database.
+
+```sh
+> docker pull allyedge/allydb
+
+> docker run -p 4000:4000 allyedge/allydb
+```
+
+#### Build from source
+
+You can also build the project from source.
+
+```sh
+> git clone https://github.com/Allyedge/allydb
+
+> cd allydb
+
+> mix deps.get
+
+> mix compile
+
+> mix release --env=prod
+
+> _build/prod/rel/allydb/bin/allydb start
+```
+
+### Environment Variables
+
+| Name                   | Description                                          | Default      |
+| ---------------------- | ---------------------------------------------------- | ------------ |
+| `ALLYDB_PORT`          | The port on which the server will listen             | `4000`       |
+| `PERSISTENCE_LOCATION` | The location where the database will be persisted    | `allydb.tab` |
+| `PERSISTENCE_INTERVAL` | The interval at which the database will be persisted | `3000`       |
