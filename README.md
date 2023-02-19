@@ -1,6 +1,10 @@
 # AllyDB
 
-![Latest Docker Image Version](https://img.shields.io/docker/v/allyedge/allydb?color=lightblue&label=Latest%20Docker%20Image%20Version&style=for-the-badge)
+[![Made with Elixir](https://forthebadge.com/images/badges/made-with-elixir.svg)](https://elixir-lang.org/)
+
+[![Latest Docker Image Version](https://img.shields.io/docker/v/allyedge/allydb?color=lightblue&label=Latest%20Docker%20Image%20Version&style=for-the-badge)](https://hub.docker.com/r/allyedge/allydb)
+
+[![License](https://img.shields.io/github/license/allyedge/allydb?style=for-the-badge)](https://github.com/Allyedge/allydb/blob/main/LICENSE)
 
 An in-memory database similar to Redis, built using Elixir.
 
