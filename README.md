@@ -12,22 +12,26 @@ An in-memory database similar to Redis, built using Elixir.
 
 ## Roadmap
 
+(?) means that the item is an idea, but it is unclear how it will be implemented, or how the implementation will look like.
+
 - [x] Basic key value store
 - [x] Lists
 - [x] Usage Guide
 - [x] Persistence
 - [x] Hashes
 - [ ] Sets
+- [ ] Blocking write and delete operations
 - [ ] Sorted Sets
 - [ ] Pub/Sub
+- [ ] Clustering/Distribution (?)
+- [ ] Custom database and persistence settings (?)
 
 ## Performance Roadmap
-
-(?) means that the item is an idea, but it is unclear how it will be implemented, or how the implementation will look like.
 
 - [ ] Better usage of OTP (?)
 - [ ] Better usage of ETS (?)
 - [ ] Optimize persistence (?)
+- [ ] Rust NIFs for heavy operations (?)
 
 ## Development Roadmap
 
