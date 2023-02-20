@@ -25,7 +25,6 @@ However, if you want to learn how to build a similar project, you can use this p
 - [x] Usage Guide
 - [x] Persistence
 - [x] Hashes
-- [ ] TypeScript client library
 - [ ] Sets
 - [ ] Sorted Sets
 - [ ] Pub/Sub
