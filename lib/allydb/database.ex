@@ -102,26 +102,31 @@ defmodule Allydb.Database do
 
   @impl true
   def handle_cast({:linsert, key, position, pivot, value}, state) do
-    case :ets.lookup(state, key) do
-      [{_, list}] ->
-        case position do
-          :before ->
-            index = Enum.find_index(list, &(&1 == pivot))
-            :ets.insert(state, {key, Enum.take(list, index) ++ [value] ++ Enum.drop(list, index)})
+    if pivot > 0 do
+      {:noreply, state}
+    else
+      case :ets.lookup(state, key) do
+        [{_, list}] ->
+          case position do
+            :before ->
+              index = Enum.find_index(list, &(&1 == pivot))
 
-          :after ->
-            index = Enum.find_index(list, &(&1 == pivot))
+              :ets.insert(state, {key, Enum.take(list, index) ++ value ++ Enum.drop(list, index)})
 
-            :ets.insert(
-              state,
-              {key, Enum.take(list, index + 1) ++ [value] ++ Enum.drop(list, index + 1)}
-            )
-        end
+            :after ->
+              index = Enum.find_index(list, &(&1 == pivot))
 
-        {:noreply, state}
+              :ets.insert(
+                state,
+                {key, Enum.take(list, index + 1) ++ [value] ++ Enum.drop(list, index + 1)}
+              )
+          end
 
-      [] ->
-        {:noreply, state}
+          {:noreply, state}
+
+        [] ->
+          {:noreply, state}
+      end
     end
   end
 

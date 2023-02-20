@@ -71,6 +71,13 @@ defmodule Allydb.IntervalPersistence do
     end
   end
 
+  def load(state) do
+    case File.exists?(state.persistence_location) do
+      true -> load_from_file(state)
+      false -> create_table(state)
+    end
+  end
+
   defp create_table(state) do
     case Database.create() do
       :ok ->
@@ -80,13 +87,6 @@ defmodule Allydb.IntervalPersistence do
 
       {:error, reason} ->
         {:error, reason}
-    end
-  end
-
-  def load(state) do
-    case File.exists?(state.persistence_location) do
-      true -> load_from_file(state)
-      false -> create_table(state)
     end
   end
 

@@ -192,7 +192,7 @@ defmodule Allydb.Handlers do
     "LREM #{key} #{value}"
   end
 
-  def handle_line(["LINSERT", key, before_after, pivot, value], socket) do
+  def handle_line(["LINSERT", key, before_after, pivot | value], socket) do
     case String.downcase(before_after) do
       "before" ->
         Allydb.Database.linsert(key, :before, pivot, value)
@@ -211,6 +211,13 @@ defmodule Allydb.Handlers do
         send_response(socket, key)
 
         "LINSERT #{key} #{before_after} #{pivot} #{value}"
+
+      _ ->
+        Logger.info("LINSERT #{key} -> Invalid before_after: #{before_after}")
+
+        send_response(socket, "Invalid command: LINSERT #{key} #{before_after} #{pivot} #{value}")
+
+        " "
     end
   end
 
@@ -333,7 +340,9 @@ defmodule Allydb.Handlers do
     "EXIT"
   end
 
-  def handle_line([command | _], socket) do
+  def handle_line(command, socket) do
+    command = Enum.join(command, " ")
+
     send_response(socket, "Invalid command: #{command}")
 
     " "
