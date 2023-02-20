@@ -2,12 +2,10 @@ defmodule Allydb.Utils do
   @moduledoc false
 
   def chunk_two(value) do
-    value =
-      Enum.chunk_every(value, 2)
-      |> Enum.map(fn [k, v] -> {k, v} end)
-      |> Enum.into(%{})
-
     value
+    |> Enum.chunk_every(2)
+    |> Enum.map(fn [k, v] -> {k, v} end)
+    |> Enum.into(%{})
   end
 
   def parse_line(line) do
