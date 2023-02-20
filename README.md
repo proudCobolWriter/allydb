@@ -25,11 +25,12 @@ However, if you want to learn how to build a similar project, you can use this p
 - [x] Usage Guide
 - [x] Persistence
 - [x] Hashes
+- [ ] TypeScript client library
 - [ ] Sets
 - [ ] Sorted Sets
 - [ ] Pub/Sub
 
-### Performance Roadmap
+## Performance Roadmap
 
 (?) means that the item is an idea, but it is unclear how it will be implemented, or how the implementation will look like.
 
@@ -37,10 +38,10 @@ However, if you want to learn how to build a similar project, you can use this p
 - [ ] Better usage of ETS (?)
 - [ ] Optimize persistence (?)
 
-### Development Roadmap
+## Development Roadmap
 
 - [ ] Testing
-- [ ] Improve the naming of things in the code
+- [ ] Improve code quality
 
 ## Usage
 
