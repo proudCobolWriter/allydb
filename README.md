@@ -12,14 +12,9 @@ An in-memory database similar to Redis, built using Elixir.
 
 ## Information
 
-AllyDB is a database that is built using Elixir. It is mostly a learning project, but I will try to make it as usable as possible.
+AllyDB is a database that is built using Elixir.
 
-## Should you use it?
-
-Probably not.
-
-It is not as stable and most likely not as fast as Redis or other similar databases.
-It also has less features than Redis.
+It is mostly a learning project, but I will try to make it as usable as possible.
 
 However, if you want to learn how to build a similar project, you can use this project as a reference.
 
@@ -51,11 +46,12 @@ However, if you want to learn how to build a similar project, you can use this p
 
 ### Environment Variables
 
-| Name                   | Description                                          | Default      |
-| ---------------------- | ---------------------------------------------------- | ------------ |
-| `ALLYDB_PORT`          | The port on which the server will listen             | `4000`       |
-| `PERSISTENCE_LOCATION` | The location where the database will be persisted    | `allydb.tab` |
-| `PERSISTENCE_INTERVAL` | The interval at which the database will be persisted | `3000`       |
+| Name                       | Description                                          | Default      |
+| -------------------------- | ---------------------------------------------------- | ------------ |
+| `ALLYDB_PORT`              | The port on which the server will listen             | `4000`       |
+| `PERSISTENCE_LOCATION`     | The location where the database will be persisted    | `allydb.tab` |
+| `PERSISTENCE_INTERVAL`     | The interval at which the database will be persisted | `3000`       |
+| `LOG_PERSISTENCE_LOCATION` | The location where the log file will be stored       | `allydb.log` |
 
 ### Installation
 
