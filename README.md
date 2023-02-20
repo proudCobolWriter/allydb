@@ -10,14 +10,6 @@
 
 An in-memory database similar to Redis, built using Elixir.
 
-## Information
-
-AllyDB is a database that is built using Elixir.
-
-It is mostly a learning project, but I will try to make it as usable as possible.
-
-However, if you want to learn how to build a similar project, you can use this project as a reference.
-
 ## Roadmap
 
 - [x] Basic key value store

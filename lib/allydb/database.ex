@@ -102,31 +102,34 @@ defmodule Allydb.Database do
 
   @impl true
   def handle_cast({:linsert, key, position, pivot, value}, state) do
-    if pivot > 0 do
-      {:noreply, state}
-    else
-      case :ets.lookup(state, key) do
-        [{_, list}] ->
-          case position do
-            :before ->
-              index = Enum.find_index(list, &(&1 == pivot))
+    case :ets.lookup(state, key) do
+      [{_, list}] ->
+        index = Enum.find_index(list, &(&1 == pivot))
 
-              :ets.insert(state, {key, Enum.take(list, index) ++ value ++ Enum.drop(list, index)})
+        case index do
+          nil ->
+            {:noreply, state}
 
-            :after ->
-              index = Enum.find_index(list, &(&1 == pivot))
+          _ ->
+            case position do
+              :before ->
+                :ets.insert(
+                  state,
+                  {key, Enum.take(list, index) ++ value ++ Enum.drop(list, index)}
+                )
 
-              :ets.insert(
-                state,
-                {key, Enum.take(list, index + 1) ++ [value] ++ Enum.drop(list, index + 1)}
-              )
-          end
+              :after ->
+                :ets.insert(
+                  state,
+                  {key, Enum.take(list, index + 1) ++ [value] ++ Enum.drop(list, index + 1)}
+                )
+            end
 
-          {:noreply, state}
+            {:noreply, state}
+        end
 
-        [] ->
-          {:noreply, state}
-      end
+      [] ->
+        {:noreply, state}
     end
   end
 
@@ -258,7 +261,15 @@ defmodule Allydb.Database do
   def handle_call({:lrange, key, start, stop}, _from, state) do
     case :ets.lookup(state, key) do
       [{_, list}] ->
-        {:reply, Enum.slice(list, start, stop - start + 1), state}
+        if stop < 0 do
+          {:reply, list, state}
+        else
+          if start < length(list) and stop < length(list) do
+            {:reply, Enum.slice(list, start, stop - start + 1), state}
+          else
+            {:reply, [], state}
+          end
+        end
 
       [] ->
         {:reply, [], state}
