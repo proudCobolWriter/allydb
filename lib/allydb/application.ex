@@ -16,14 +16,6 @@ defmodule Allydb.Application do
 
     children = [
       {
-        Allydb.Persistence,
-        name: Allydb.Persistence, args: [log_persistence_location, persistence_location]
-      },
-      {
-        Allydb.IntervalPersistence,
-        name: Allydb.IntervalPersistence, args: [persistence_location, persistence_interval]
-      },
-      {
         Allydb.Database,
         name: Allydb.Database
       },
@@ -31,7 +23,15 @@ defmodule Allydb.Application do
         Task.Supervisor,
         name: Allydb.Server.TaskSupervisor
       },
-      Supervisor.child_spec({Task, fn -> Allydb.Server.accept(port) end}, restart: :permanent)
+      Supervisor.child_spec({Task, fn -> Allydb.Server.accept(port) end}, restart: :permanent),
+      {
+        Allydb.Persistence,
+        name: Allydb.Persistence, args: [log_persistence_location, persistence_location]
+      },
+      {
+        Allydb.IntervalPersistence,
+        name: Allydb.IntervalPersistence, args: [persistence_location, persistence_interval]
+      }
     ]
 
     opts = [strategy: :one_for_one, name: Allydb.Supervisor]

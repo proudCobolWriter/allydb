@@ -1,5 +1,6 @@
 defmodule Allydb.Persistence do
   @moduledoc false
+
   alias Allydb.Database
   alias Allydb.IntervalPersistence
   alias Allydb.Handlers

@@ -8,6 +8,11 @@ defmodule Allydb.Utils do
     |> Enum.into(%{})
   end
 
+  def list_to_string(list) do
+    list
+    |> Enum.map_join(" ", fn x -> x end)
+  end
+
   def parse_line(line) do
     line
     |> String.split(" ")

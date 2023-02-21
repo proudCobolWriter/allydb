@@ -1,5 +1,6 @@
 defmodule Allydb.Database do
   @moduledoc false
+  alias Allydb.Utils
 
   use GenServer
 
@@ -193,6 +194,52 @@ defmodule Allydb.Database do
   end
 
   @impl true
+  def handle_cast({:sadd, key, values}, state) do
+    case :ets.lookup(state, key) do
+      [{_, set}] ->
+        case set do
+          %MapSet{} ->
+            new_set = MapSet.union(set, MapSet.new(values))
+
+            :ets.insert(state, {key, new_set})
+
+            {:noreply, state}
+
+          _ ->
+            :ets.insert(state, {key, MapSet.new(values)})
+
+            {:noreply, state}
+        end
+
+      [] ->
+        :ets.insert(state, {key, MapSet.new(values)})
+
+        {:noreply, state}
+    end
+  end
+
+  @impl true
+  def handle_cast({:srem, key, values}, state) do
+    case :ets.lookup(state, key) do
+      [{_, set}] ->
+        case set do
+          %MapSet{} ->
+            new_set = MapSet.difference(set, MapSet.new(values))
+
+            :ets.insert(state, {key, new_set})
+
+            {:noreply, state}
+
+          _ ->
+            {:noreply, state}
+        end
+
+      [] ->
+        {:noreply, state}
+    end
+  end
+
+  @impl true
   def handle_call(:create, _from, state) do
     :ets.new(state, [:named_table, :public, :set])
 
@@ -202,8 +249,21 @@ defmodule Allydb.Database do
   @impl true
   def handle_call({:get, key}, _from, state) do
     case :ets.lookup(state, key) do
-      [{_, value}] -> {:reply, value, state}
-      [] -> {:reply, nil, state}
+      [{_, value}] ->
+        case value do
+          %MapSet{} ->
+            list = MapSet.to_list(value)
+
+            text = Utils.list_to_string(list)
+
+            {:reply, text, state}
+
+          _ ->
+            {:reply, value, state}
+        end
+
+      [] ->
+        {:reply, nil, state}
     end
   end
 
@@ -380,6 +440,135 @@ defmodule Allydb.Database do
     end
   end
 
+  @impl true
+  def handle_call({:smembers, key}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, set}] ->
+        case set do
+          %MapSet{} -> {:reply, MapSet.to_list(set), state}
+          _ -> {:reply, [], state}
+        end
+
+      [] ->
+        {:reply, [], state}
+    end
+  end
+
+  @impl true
+  def handle_call({:scard, key}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, set}] ->
+        case set do
+          %MapSet{} -> {:reply, MapSet.size(set), state}
+          _ -> {:reply, 0, state}
+        end
+
+      [] ->
+        {:reply, 0, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:sdiff, keys}, _from, state) do
+    diff =
+      Enum.reduce(keys, nil, fn key, acc ->
+        case :ets.lookup(state, key) do
+          [{_, set}] ->
+            case set do
+              %MapSet{} ->
+                if is_nil(acc) do
+                  set
+                else
+                  MapSet.difference(acc, set)
+                end
+
+              _ ->
+                acc
+            end
+
+          [] ->
+            acc
+        end
+      end)
+
+    {:reply, MapSet.to_list(diff), state}
+  end
+
+  @impl true
+  def handle_call({:sinter, keys}, _from, state) do
+    inter =
+      Enum.reduce(keys, nil, fn key, acc ->
+        case :ets.lookup(state, key) do
+          [{_, set}] ->
+            case set do
+              %MapSet{} ->
+                if is_nil(acc) do
+                  set
+                else
+                  MapSet.intersection(acc, set)
+                end
+
+              _ ->
+                acc
+            end
+
+          [] ->
+            acc
+        end
+      end)
+
+    {:reply, MapSet.to_list(inter), state}
+  end
+
+  @impl true
+  def handle_call({:sismember, key, value}, _from, state) do
+    case :ets.lookup(state, key) do
+      [{_, set}] ->
+        case set do
+          %MapSet{} ->
+            is_member =
+              case MapSet.member?(set, value) do
+                true -> 1
+                false -> 0
+              end
+
+            {:reply, is_member, state}
+
+          _ ->
+            {:reply, 0, state}
+        end
+
+      [] ->
+        {:reply, 0, state}
+    end
+  end
+
+  @impl true
+  def handle_call({:sunion, keys}, _from, state) do
+    union =
+      Enum.reduce(keys, nil, fn key, acc ->
+        case :ets.lookup(state, key) do
+          [{_, set}] ->
+            case set do
+              %MapSet{} ->
+                if is_nil(acc) do
+                  set
+                else
+                  MapSet.union(acc, set)
+                end
+
+              _ ->
+                acc
+            end
+
+          [] ->
+            acc
+        end
+      end)
+
+    {:reply, MapSet.to_list(union), state}
+  end
+
   def create() do
     GenServer.call(__MODULE__, :create)
   end
@@ -482,5 +671,37 @@ defmodule Allydb.Database do
 
   def hvals(key) do
     GenServer.call(__MODULE__, {:hvals, key})
+  end
+
+  def sadd(key, value) do
+    GenServer.cast(__MODULE__, {:sadd, key, value})
+  end
+
+  def smembers(key) do
+    GenServer.call(__MODULE__, {:smembers, key})
+  end
+
+  def srem(key, value) do
+    GenServer.cast(__MODULE__, {:srem, key, value})
+  end
+
+  def scard(key) do
+    GenServer.call(__MODULE__, {:scard, key})
+  end
+
+  def sdiff(keys) do
+    GenServer.call(__MODULE__, {:sdiff, keys})
+  end
+
+  def sinter(keys) do
+    GenServer.call(__MODULE__, {:sinter, keys})
+  end
+
+  def sismember(key, value) do
+    GenServer.call(__MODULE__, {:sismember, key, value})
+  end
+
+  def sunion(keys) do
+    GenServer.call(__MODULE__, {:sunion, keys})
   end
 end

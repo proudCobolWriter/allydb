@@ -19,7 +19,7 @@ An in-memory database similar to Redis, built using Elixir.
 - [x] Usage Guide
 - [x] Persistence
 - [x] Hashes
-- [ ] Sets
+- [x] Sets
 - [ ] Blocking write and delete operations
 - [ ] Sorted Sets
 - [ ] Pub/Sub
@@ -37,6 +37,7 @@ An in-memory database similar to Redis, built using Elixir.
 
 - [ ] Testing
 - [ ] Improve code quality
+- [ ] Extract repetitive code into functions
 
 ## Usage
 

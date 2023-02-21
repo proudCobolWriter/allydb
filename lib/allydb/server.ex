@@ -22,8 +22,6 @@ defmodule Allydb.Server do
   defp loop_acceptor(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
 
-    :gen_tcp.send(client, "> ")
-
     {:ok, pid} =
       Task.Supervisor.start_child(Allydb.Server.TaskSupervisor, fn -> serve(client) end)
 
@@ -37,10 +35,10 @@ defmodule Allydb.Server do
       {:ok, data} ->
         data |> Utils.parse_line() |> Handlers.handle_line(socket) |> Persistence.persist()
 
+        serve(socket)
+
       {:error, :closed} ->
         :gen_tcp.close(socket)
     end
-
-    serve(socket)
   end
 end
